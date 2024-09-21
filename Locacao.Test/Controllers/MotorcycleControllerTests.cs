@@ -22,7 +22,7 @@ namespace Locacao.Test.Controllers
         }
 
         [Fact]
-        public async Task Post_ReturnsCreatedAtActionResult_WithMotorcycleDto()
+        public async Task Post_ReturnsCreatedAtActionResult_WhenModelIsValid()
         {
             // Arrange
             var motorcycleDto = new MotorcycleDto { Id = Guid.NewGuid() };
@@ -36,13 +36,13 @@ namespace Locacao.Test.Controllers
 
             // Assert
             var createdAtActionResult = Assert.IsType<CreatedAtActionResult>(result.Result);
-            Assert.Equal("Get", createdAtActionResult.ActionName);
+            Assert.Equal(nameof(MotorcycleController.Get), createdAtActionResult.ActionName);
             Assert.Equal(motorcycleDto.Id, createdAtActionResult.RouteValues["id"]);
             Assert.Equal(motorcycleDto, createdAtActionResult.Value);
         }
 
         [Fact]
-        public async Task Get_ReturnsOkResult_WithListOfMotorcycleDtos()
+        public async Task Get_ReturnsOkObjectResult_WithListOfMotorcycles()
         {
             // Arrange
             var motorcycles = new List<Motorcycle> { new Motorcycle(), new Motorcycle() };
@@ -54,36 +54,35 @@ namespace Locacao.Test.Controllers
             var result = await _controller.Get();
 
             // Assert
-            var okResult = Assert.IsType<OkObjectResult>(result);
-            var returnValue = Assert.IsType<List<MotorcycleDto>>(okResult.Value);
-            Assert.Equal(motorcycleDtos.Count, returnValue.Count);
+            var okObjectResult = Assert.IsType<OkObjectResult>(result.Result);
+            var returnValue = Assert.IsType<List<MotorcycleDto>>(okObjectResult.Value);
+            Assert.Equal(2, returnValue.Count);
         }
 
         [Fact]
-        public async Task GetById_ReturnsOkResult_WithMotorcycleDto()
+        public async Task Get_ReturnsNotFound_WhenMotorcycleDoesNotExist()
         {
             // Arrange
             var id = Guid.NewGuid();
-            var motorcycle = new Motorcycle();
-            var motorcycleDto = new MotorcycleDto();
-            _mockServices.Setup(s => s.GetByIdAsync(id)).ReturnsAsync(motorcycle);
-            _mockMapper.Setup(m => m.Map<MotorcycleDto>(motorcycle)).Returns(motorcycleDto);
+            _mockServices.Setup(s => s.GetByIdAsync(id)).ReturnsAsync((Motorcycle)null);
 
             // Act
             var result = await _controller.Get(id);
 
             // Assert
-            var okResult = Assert.IsType<OkObjectResult>(result.Result);
-            Assert.Equal(motorcycleDto, okResult.Value);
+            var notFoundObjectResult = Assert.IsType<NotFoundObjectResult>(result.Result);
+            var errorResponse = Assert.IsType<ErrorResponse>(notFoundObjectResult.Value);
+            Assert.Equal("Motorcycle not found", errorResponse.Message);
         }
 
         [Fact]
-        public async Task Put_ReturnsOkResult_WithUpdatedMotorcycleDto()
+        public async Task Put_ReturnsOkObjectResult_WhenUpdateIsSuccessful()
         {
             // Arrange
             var id = Guid.NewGuid();
-            var motorcycleDto = new MotorcycleDto();
-            var motorcycle = new Motorcycle();
+            var motorcycleDto = new MotorcycleDto { Id = id };
+            var motorcycle = new Motorcycle { Id = id };
+            _mockServices.Setup(s => s.GetByIdAsync(id)).ReturnsAsync(motorcycle);
             _mockMapper.Setup(m => m.Map<Motorcycle>(motorcycleDto)).Returns(motorcycle);
             _mockMapper.Setup(m => m.Map<MotorcycleDto>(motorcycle)).Returns(motorcycleDto);
             _mockServices.Setup(s => s.UpdateAsync(motorcycle)).Returns(Task.CompletedTask);
@@ -92,15 +91,34 @@ namespace Locacao.Test.Controllers
             var result = await _controller.Put(id, motorcycleDto);
 
             // Assert
-            var okResult = Assert.IsType<OkObjectResult>(result);
-            Assert.Equal(motorcycleDto, okResult.Value);
+            var okObjectResult = Assert.IsType<OkObjectResult>(result.Result);
+            Assert.Equal(motorcycleDto, okObjectResult.Value);
         }
 
         [Fact]
-        public async Task Delete_ReturnsNoContentResult()
+        public async Task Put_ReturnsNotFound_WhenMotorcycleDoesNotExist()
         {
             // Arrange
             var id = Guid.NewGuid();
+            var motorcycleDto = new MotorcycleDto { Id = id };
+            _mockServices.Setup(s => s.GetByIdAsync(id)).ReturnsAsync((Motorcycle)null);
+
+            // Act
+            var result = await _controller.Put(id, motorcycleDto);
+
+            // Assert
+            var notFoundObjectResult = Assert.IsType<NotFoundObjectResult>(result.Result);
+            var errorResponse = Assert.IsType<ErrorResponse>(notFoundObjectResult.Value);
+            Assert.Equal("Motorcycle not found", errorResponse.Message);
+        }
+
+        [Fact]
+        public async Task Delete_ReturnsNoContent_WhenDeletionIsSuccessful()
+        {
+            // Arrange
+            var id = Guid.NewGuid();
+            var motorcycle = new Motorcycle { Id = id };
+            _mockServices.Setup(s => s.GetByIdAsync(id)).ReturnsAsync(motorcycle);
             _mockServices.Setup(s => s.DeleteAsync(id)).Returns(Task.CompletedTask);
 
             // Act
@@ -108,6 +126,22 @@ namespace Locacao.Test.Controllers
 
             // Assert
             Assert.IsType<NoContentResult>(result);
+        }
+
+        [Fact]
+        public async Task Delete_ReturnsNotFound_WhenMotorcycleDoesNotExist()
+        {
+            // Arrange
+            var id = Guid.NewGuid();
+            _mockServices.Setup(s => s.GetByIdAsync(id)).ReturnsAsync((Motorcycle)null);
+
+            // Act
+            var result = await _controller.Delete(id);
+
+            // Assert
+            var notFoundObjectResult = Assert.IsType<NotFoundObjectResult>(result);
+            var errorResponse = Assert.IsType<ErrorResponse>(notFoundObjectResult.Value);
+            Assert.Equal("Motorcycle not found", errorResponse.Message);
         }
     }
 }

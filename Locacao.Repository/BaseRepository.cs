@@ -30,9 +30,27 @@ namespace Locacao.Repository
             await _context.SaveChangesAsync();
         }
 
+        /* public async Task UpdateAsync(T entity)
+         {
+             _dbSet.Attach(entity);
+             _context.Entry(entity).State = EntityState.Modified;
+             await _context.SaveChangesAsync();
+
+
+             var existingEntity = await _dbSet.FindAsync(entity.Id);
+             if (existingEntity != null)
+             {
+                 _context.Entry(existingEntity).State = EntityState.Detached;
+             }
+             _context.Entry(entity).State = EntityState.Modified;
+             await _context.SaveChangesAsync();
+
+         } */
+
         public async Task UpdateAsync(T entity)
         {
-            _dbSet.Attach(entity);
+            _context.ChangeTracker.Clear(); // This will detach all entities
+            _context.Set<T>().Attach(entity);
             _context.Entry(entity).State = EntityState.Modified;
             await _context.SaveChangesAsync();
         }

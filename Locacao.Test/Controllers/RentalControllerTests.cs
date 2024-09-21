@@ -22,7 +22,7 @@ namespace Locacao.Test.Controllers
         }
 
         [Fact]
-        public async Task Post_ReturnsCreatedAtActionResult_WithRentalDto()
+        public async Task Post_ReturnsCreatedAtActionResult_WhenModelIsValid()
         {
             // Arrange
             var rentalDto = new RentalDto { Id = Guid.NewGuid() };
@@ -36,13 +36,13 @@ namespace Locacao.Test.Controllers
 
             // Assert
             var createdAtActionResult = Assert.IsType<CreatedAtActionResult>(result.Result);
-            Assert.Equal("Get", createdAtActionResult.ActionName);
+            Assert.Equal(nameof(RentalController.Get), createdAtActionResult.ActionName);
             Assert.Equal(rentalDto.Id, createdAtActionResult.RouteValues["id"]);
             Assert.Equal(rentalDto, createdAtActionResult.Value);
         }
 
         [Fact]
-        public async Task Get_ReturnsOkResult_WithListOfRentalDtos()
+        public async Task Get_ReturnsOkObjectResult_WithListOfRentals()
         {
             // Arrange
             var rentals = new List<Rental> { new Rental(), new Rental() };
@@ -54,37 +54,53 @@ namespace Locacao.Test.Controllers
             var result = await _controller.Get();
 
             // Assert
-            var okResult = Assert.IsType<OkObjectResult>(result);
-            var returnValue = Assert.IsType<List<RentalDto>>(okResult.Value);
-            Assert.Equal(rentalDtos.Count, returnValue.Count);
+            var okObjectResult = Assert.IsType<OkObjectResult>(result.Result);
+            var returnValue = Assert.IsType<List<RentalDto>>(okObjectResult.Value);
+            Assert.Equal(2, returnValue.Count);
         }
 
         [Fact]
-        public async Task GetById_ReturnsOkResult_WithRentalDto()
+        public async Task GetById_ReturnsOkObjectResult_WhenRentalExists()
         {
             // Arrange
             var id = Guid.NewGuid();
-            var rental = new Rental();
-            var rentalDto = new RentalDto();
+            var rental = new Rental { Id = id };
+            var rentalDto = new RentalDto { Id = id };
             _mockServices.Setup(s => s.GetByIdAsync(id)).ReturnsAsync(rental);
-            _mockMapper.Setup(m => m.Map<IEnumerable<RentalDto>>(rental)).Returns(new List<RentalDto> { rentalDto });
+            _mockMapper.Setup(m => m.Map<RentalDto>(rental)).Returns(rentalDto);
 
             // Act
             var result = await _controller.Get(id);
 
             // Assert
-            var okResult = Assert.IsType<OkObjectResult>(result.Result);
-            var returnValue = Assert.IsType<List<RentalDto>>(okResult.Value);
-            Assert.Single(returnValue);
+            var okObjectResult = Assert.IsType<OkObjectResult>(result.Result);
+            Assert.Equal(rentalDto, okObjectResult.Value);
         }
 
         [Fact]
-        public async Task Put_ReturnsOkResult_WithUpdatedRentalDto()
+        public async Task GetById_ReturnsNotFound_WhenRentalDoesNotExist()
         {
             // Arrange
             var id = Guid.NewGuid();
-            var rentalDto = new RentalDto();
-            var rental = new Rental();
+            _mockServices.Setup(s => s.GetByIdAsync(id)).ReturnsAsync((Rental)null);
+
+            // Act
+            var result = await _controller.Get(id);
+
+            // Assert
+            var notFoundObjectResult = Assert.IsType<NotFoundObjectResult>(result.Result);
+            var errorResponse = Assert.IsType<ErrorResponse>(notFoundObjectResult.Value);
+            Assert.Equal("Rental not found", errorResponse.Message);
+        }
+
+        [Fact]
+        public async Task Put_ReturnsOkObjectResult_WhenUpdateIsSuccessful()
+        {
+            // Arrange
+            var id = Guid.NewGuid();
+            var rentalDto = new RentalDto { Id = id };
+            var rental = new Rental { Id = id };
+            _mockServices.Setup(s => s.GetByIdAsync(id)).ReturnsAsync(rental);
             _mockMapper.Setup(m => m.Map<Rental>(rentalDto)).Returns(rental);
             _mockMapper.Setup(m => m.Map<RentalDto>(rental)).Returns(rentalDto);
             _mockServices.Setup(s => s.UpdateAsync(rental)).Returns(Task.CompletedTask);
@@ -93,15 +109,34 @@ namespace Locacao.Test.Controllers
             var result = await _controller.Put(id, rentalDto);
 
             // Assert
-            var okResult = Assert.IsType<OkObjectResult>(result);
-            Assert.Equal(rentalDto, okResult.Value);
+            var okObjectResult = Assert.IsType<OkObjectResult>(result.Result);
+            Assert.Equal(rentalDto, okObjectResult.Value);
         }
 
         [Fact]
-        public async Task Delete_ReturnsNoContentResult()
+        public async Task Put_ReturnsNotFound_WhenRentalDoesNotExist()
         {
             // Arrange
             var id = Guid.NewGuid();
+            var rentalDto = new RentalDto { Id = id };
+            _mockServices.Setup(s => s.GetByIdAsync(id)).ReturnsAsync((Rental)null);
+
+            // Act
+            var result = await _controller.Put(id, rentalDto);
+
+            // Assert
+            var notFoundObjectResult = Assert.IsType<NotFoundObjectResult>(result.Result);
+            var errorResponse = Assert.IsType<ErrorResponse>(notFoundObjectResult.Value);
+            Assert.Equal("Rental not found", errorResponse.Message);
+        }
+
+        [Fact]
+        public async Task Delete_ReturnsNoContent_WhenDeletionIsSuccessful()
+        {
+            // Arrange
+            var id = Guid.NewGuid();
+            var rental = new Rental { Id = id };
+            _mockServices.Setup(s => s.GetByIdAsync(id)).ReturnsAsync(rental);
             _mockServices.Setup(s => s.DeleteAsync(id)).Returns(Task.CompletedTask);
 
             // Act
@@ -109,6 +144,22 @@ namespace Locacao.Test.Controllers
 
             // Assert
             Assert.IsType<NoContentResult>(result);
+        }
+
+        [Fact]
+        public async Task Delete_ReturnsNotFound_WhenRentalDoesNotExist()
+        {
+            // Arrange
+            var id = Guid.NewGuid();
+            _mockServices.Setup(s => s.GetByIdAsync(id)).ReturnsAsync((Rental)null);
+
+            // Act
+            var result = await _controller.Delete(id);
+
+            // Assert
+            var notFoundObjectResult = Assert.IsType<NotFoundObjectResult>(result);
+            var errorResponse = Assert.IsType<ErrorResponse>(notFoundObjectResult.Value);
+            Assert.Equal("Rental not found", errorResponse.Message);
         }
     }
 }
