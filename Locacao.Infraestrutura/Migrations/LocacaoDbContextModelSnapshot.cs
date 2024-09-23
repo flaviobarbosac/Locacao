@@ -8,7 +8,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 #nullable disable
 
-namespace Locacao.Infraestrutura.Migrations
+namespace Locacao.Infraestructure.Migrations
 {
     [DbContext(typeof(LocacaoDbContext))]
     partial class LocacaoDbContextModelSnapshot : ModelSnapshot
@@ -165,6 +165,37 @@ namespace Locacao.Infraestrutura.Migrations
                     b.HasIndex("MotorcycleId");
 
                     b.ToTable("Rentals");
+                });
+
+            modelBuilder.Entity("Locacao.Domain.Model.User", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreationDate")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime>("ModificationDate")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Password")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int>("Profile")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Username")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Username")
+                        .IsUnique();
+
+                    b.ToTable("Users");
                 });
 
             modelBuilder.Entity("Locacao.Domain.Model.Rental", b =>

@@ -20,6 +20,12 @@ namespace Locacao.API.Configuration
 
             CreateMap<Rental, RentalDto>();
             CreateMap<RentalDto, Rental>();
+
+            CreateMap<LoginDto, Login>();
+            CreateMap<Login, LoginDto>();
+
+            CreateMap<UserDto, User>();
+            CreateMap<User, UserDto>();            
         }
     }
 }

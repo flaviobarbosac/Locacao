@@ -3,6 +3,7 @@ using Locacao.Domain.Model;
 using AutoMapper;
 using Locacao.Dto;
 using Swashbuckle.AspNetCore.Annotations;
+using Locacao.Services.Interface;
 
 namespace Locacao.Controllers
 {
@@ -15,10 +16,10 @@ namespace Locacao.Controllers
     [ApiExplorerSettings(GroupName = "v1")]
     public class RentalController : ControllerBase
     {
-        private readonly Services.Inteface.IBaseServices<Rental> _services;
+        private readonly IRentalService _services;
         private readonly IMapper _mapper;
 
-        public RentalController(Services.Inteface.IBaseServices<Rental> services, IMapper mapper)
+        public RentalController(IRentalService services, IMapper mapper)
         {
             _services = services;
             _mapper = mapper;
@@ -66,36 +67,6 @@ namespace Locacao.Controllers
                 var result = await _services.GetAllAsync();
                 var rentalDtos = _mapper.Map<IEnumerable<RentalDto>>(result);
                 return Ok(rentalDtos);
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new ErrorResponse { Message = $"An error occurred while processing your request: {ex.Message}" });
-            }
-        }
-
-        /// <summary>
-        /// Retrieves a specific rental by id.
-        /// </summary>
-        /// <param name="id">The id of the rental to retrieve.</param>
-        /// <returns>The requested rental.</returns>
-        /// <response code="200">Returns the requested rental.</response>
-        /// <response code="404">If the rental is not found.</response>
-        /// <response code="500">If there was an internal server error.</response>
-        [HttpGet("{id}")]
-        [ProducesResponseType(typeof(RentalDto), StatusCodes.Status200OK)]
-        [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status404NotFound)]
-        [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status500InternalServerError)]
-        public async Task<ActionResult<RentalDto>> Get(Guid id)
-        {
-            try
-            {
-                var rental = await _services.GetByIdAsync(id);
-                if (rental == null)
-                {
-                    return NotFound(new ErrorResponse { Message = "Rental not found" });
-                }
-                var rentalDto = _mapper.Map<RentalDto>(rental);
-                return Ok(rentalDto);
             }
             catch (Exception ex)
             {
@@ -170,5 +141,69 @@ namespace Locacao.Controllers
                 return StatusCode(500, new ErrorResponse { Message = $"An error occurred while processing your request: {ex.Message}" });
             }
         }
+
+        /// <summary>
+        /// Create a Rental
+        /// </summary>
+        /// <param name="request">Informe initial data</param>
+        /// <returns></returns>
+        [HttpPost("{request}")]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status404NotFound)]
+        [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status500InternalServerError)]        
+        public IActionResult CreateRental([FromBody] CreateRentalRequest request)
+        {
+            try
+            {
+                var rental = _services.CreateRental(request.MotorcycleId, request.DeliverymanId, request.RentalPlan);
+                return CreatedAtAction(nameof(GetRental), new { id = rental.Id }, rental);
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+
+        /// <summary>
+        /// Get motorcycle
+        /// </summary>
+        /// <param name="id">Inform the ID</param>
+        /// <param name="request">Inform the request</param>
+        /// <returns></returns>
+        [HttpPut("{id}/return")]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status404NotFound)]
+        [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status500InternalServerError)]
+        public IActionResult ReturnMotorcycle(Guid id, [FromBody] ReturnMotorcycleRequest request)
+        {
+            var rental = _services.GetByIdAsync(id);
+            if (rental == null)
+            {
+                return NotFound();
+            }
+
+            var totalCost = _services.CalculateTotalCost(rental.Result, request.ReturnDate);
+            rental.Result.TotalCost = totalCost;
+            rental.Result.EndDate = request.ReturnDate;
+
+            _services.UpdateAsync(rental.Result);
+
+            return Ok(new { TotalCost = totalCost });
+        }
+
+        [HttpGet("{id}")]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status404NotFound)]
+        [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status500InternalServerError)]
+        public IActionResult GetRental(Guid id)
+        {
+            var rental = _services.GetByIdAsync(id);
+            if (rental == null)
+            {
+                return NotFound();
+            }
+            return Ok(rental);
+        }
+
     }
 }

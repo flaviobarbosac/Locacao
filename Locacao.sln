@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.10.35013.160
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Locacao", "Locacao\Locacao.csproj", "{6FF988E6-9A89-4D6F-A731-42B62D1F95A1}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Locacao", "Locacao\Locacao.csproj", "{6FF988E6-9A89-4D6F-A731-42B62D1F95A1}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Locacao.Domain", "Locacao.Domain\Locacao.Domain.csproj", "{53D84698-70CF-4CB9-AAED-E0D964E74BBA}"
 EndProject
@@ -13,7 +13,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Locacao.Repository", "Locac
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Locacao.Services", "Locacao.Services\Locacao.Services.csproj", "{70532B03-17C0-41C4-AF3D-587AA2097EFF}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Locacao.Test", "Locacao.Test\Locacao.Test.csproj", "{9F631094-D901-4C1E-9581-9D4845C1C113}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Locacao.Test", "Locacao.Test\Locacao.Test.csproj", "{9F631094-D901-4C1E-9581-9D4845C1C113}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

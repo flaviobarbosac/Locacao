@@ -11,6 +11,7 @@ namespace Locacao.Infraestructure
         public DbSet<Deliveryman> Deliverymen { get; set; }
         public DbSet<Rental> Rentals { get; set; }
         public DbSet<MotorcycleRegistrationEvent> MotorcycleRegistrationEvents { get; set; }
+        public DbSet<User> Users { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -25,6 +26,10 @@ namespace Locacao.Infraestructure
             modelBuilder.Entity<Deliveryman>()
                 .HasIndex(d => d.DriversLicenseNumber)
                 .IsUnique();
+
+            modelBuilder.Entity<User>()
+                 .HasIndex(u => u.Username)
+                 .IsUnique();
         }
     }
 }

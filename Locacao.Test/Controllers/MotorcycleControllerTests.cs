@@ -2,7 +2,7 @@ using AutoMapper;
 using Locacao.Controllers;
 using Locacao.Domain.Model;
 using Locacao.Dto;
-using Locacao.Services.Inteface;
+using Locacao.Services.Interface;
 using Microsoft.AspNetCore.Mvc;
 using Moq;
 
@@ -10,13 +10,13 @@ namespace Locacao.Test.Controllers
 {
     public class MotorcycleControllerTests
     {
-        private readonly Mock<IBaseServices<Motorcycle>> _mockServices;
+        private readonly Mock<IMotorcycleService> _mockServices;
         private readonly Mock<IMapper> _mockMapper;
         private readonly MotorcycleController _controller;
 
         public MotorcycleControllerTests()
         {
-            _mockServices = new Mock<IBaseServices<Motorcycle>>();
+            _mockServices = new Mock<IMotorcycleService>();
             _mockMapper = new Mock<IMapper>();
             _controller = new MotorcycleController(_mockServices.Object, _mockMapper.Object);
         }
